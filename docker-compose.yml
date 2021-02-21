@@ -1,0 +1,49 @@
+version: '3'
+services:
+  nodeapp:
+    container_name: dbgodevmod
+    restart: always
+    build: .
+    ports:
+      - '3020:3020'
+    volumes:
+      - ./docker-data/client:/app/client
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+  mongo:
+    container_name: mongo
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "yourPassword"
+      MONGO_INITDB_DATABASE: "databaseName"
+      MONGO_USERNAME: "admin"
+      MONGO_PASSWORD: "yourPassword"
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./docker-data/mongodata:/data/db
+    command: --auth
+    ports:
+      - '27017:27017'
+  elasticservice:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    container_name: elasticsearch
+    restart: always
+    volumes:
+      - transport.host=127.0.0.1
+      - xpack.security.enabled=false
+      - ~/godevmodblog/docker-data/elasticsearchdata:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms312m -Xmx312m
+    ports:
+      - '9200:9200'
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    volumes:
+      - ./docker-data/redisdata:/data
+    ports:
+      - '6379:6379'
